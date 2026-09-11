@@ -1,0 +1,4 @@
+work/
+work-logbook-test.xlsx
+outputs/personal-todo/__pycache__/
+outputs/personal-todo/data/*.log

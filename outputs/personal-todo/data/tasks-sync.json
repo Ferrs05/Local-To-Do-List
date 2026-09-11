@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "syncedAt": "2026-09-07T00:42:11.351Z",
+  "tasks": [
+    {
+      "id": "d43b133a-674b-4e03-845e-741e7d8dcc72",
+      "title": "inventory system",
+      "notes": "rombak ui/ux",
+      "startAt": "2026-06-08T10:46",
+      "deadline": "",
+      "remindBeforeMinutes": 10080,
+      "attachments": [],
+      "priority": "high",
+      "status": "active",
+      "done": false,
+      "createdAt": "2026-06-08T02:47:12.003Z",
+      "updatedAt": "2026-06-08T02:47:12.003Z",
+      "category": "Work",
+      "tags": [],
+      "subtasks": []
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Personal Workplace ToDo</title>
+    <link rel="icon" href="assets/app-icon.ico">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-icon" src="assets/app-icon.png" alt="">
+          <div class="brand-copy">
+            <p class="eyebrow">Personal Workplace</p>
+            <h1>To-Do List</h1>
+            <p class="brand-subtitle">Ruang kerja harian untuk task, deadline, checklist, dan reminder.</p>
+          </div>
+        </div>
+
+        <div class="topbar-side">
+          <div class="service-chip" id="reminderServiceStatus" data-status="checking">
+            <span class="service-dot" aria-hidden="true"></span>
+            <span id="reminderServiceText">Cek reminder</span>
+          </div>
+          <div class="top-actions" aria-label="Backup task">
+            <button class="utility-button" id="exportBtn" type="button">Export</button>
+            <label class="utility-button file-button" for="importInput">Import</label>
+            <input id="importInput" type="file" accept="application/json,.json">
+            <button class="danger-button" id="clearCompletedBtn" type="button">Clear Done</button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="app-nav" aria-label="Navigasi aplikasi">
+        <button class="app-nav-button active" type="button" data-page="todo">To-Do Board</button>
+        <button class="app-nav-button" type="button" data-page="notebook">Logbook</button>
+      </nav>
+
+      <main class="workspace app-page active" id="todoPage">
+        <aside class="left-rail" aria-label="Ringkasan dan task editor">
+          <section class="overview-strip" aria-label="Ringkasan task">
+            <article class="stat-block">
+              <span>Total</span>
+              <strong id="statTotal">0</strong>
+            </article>
+            <article class="stat-block alert">
+              <span>Overdue</span>
+              <strong id="statOverdue">0</strong>
+            </article>
+            <article class="stat-block today">
+              <span>Hari ini</span>
+              <strong id="statToday">0</strong>
+            </article>
+            <article class="stat-block done">
+              <span>Selesai</span>
+              <strong id="statDone">0</strong>
+            </article>
+          </section>
+
+          <form class="task-form" id="taskForm" autocomplete="off">
+            <input type="hidden" id="taskId">
+            <div class="form-heading">
+              <div>
+                <p class="panel-kicker">Editor</p>
+                <h2 id="formTitle">Tambah Task</h2>
+              </div>
+              <button class="text-button hidden" id="cancelEditBtn" type="button">Batal Edit</button>
+            </div>
+
+            <section class="form-section" aria-label="Task utama">
+              <div class="section-heading">
+                <span class="section-index">01</span>
+                <span>Task</span>
+              </div>
+              <label>
+                <span>Nama task</span>
+                <input id="titleInput" type="text" maxlength="120" required placeholder="Mis. follow up klien">
+              </label>
+              <label>
+                <span>Catatan</span>
+                <textarea id="notesInput" rows="4" maxlength="700" placeholder="Detail singkat, link, atau konteks kerja"></textarea>
+              </label>
+            </section>
+
+            <section class="form-section" aria-label="Jadwal task">
+              <div class="section-heading">
+                <span class="section-index">02</span>
+                <span>Jadwal</span>
+              </div>
+              <div class="schedule-grid">
+                <fieldset class="schedule-panel">
+                  <legend>Mulai</legend>
+                  <div class="date-time-row">
+                    <label>
+                      <span>Tanggal</span>
+                      <input id="startDateInput" type="date">
+                    </label>
+                    <label>
+                      <span>Jam</span>
+                      <input id="startTimeInput" type="time" step="60">
+                    </label>
+                  </div>
+                  <div class="quick-buttons" aria-label="Pilih cepat waktu mulai">
+                    <button type="button" data-schedule="start" data-preset="now">Sekarang</button>
+                    <button type="button" data-schedule="start" data-preset="today-0900">Hari ini 09:00</button>
+                    <button type="button" data-schedule="start" data-preset="clear">Kosongkan</button>
+                  </div>
+                </fieldset>
+
+                <fieldset class="schedule-panel deadline-panel">
+                  <legend>Deadline</legend>
+                  <div class="date-time-row">
+                    <label>
+                      <span>Tanggal</span>
+                      <input id="deadlineDateInput" type="date">
+                    </label>
+                    <label>
+                      <span>Jam</span>
+                      <input id="deadlineTimeInput" type="time" step="60">
+                    </label>
+                  </div>
+                  <div class="quick-buttons" aria-label="Pilih cepat deadline">
+                    <button type="button" data-schedule="deadline" data-preset="today-1700">Hari ini 17:00</button>
+                    <button type="button" data-schedule="deadline" data-preset="tomorrow-0900">Besok 09:00</button>
+                    <button type="button" data-schedule="deadline" data-preset="tomorrow-1700">Besok 17:00</button>
+                    <button type="button" data-schedule="deadline" data-preset="clear">Kosongkan</button>
+                  </div>
+                </fieldset>
+              </div>
+            </section>
+
+            <section class="form-section" aria-label="Detail task">
+              <div class="section-heading">
+                <span class="section-index">03</span>
+                <span>Detail</span>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Prioritas</span>
+                  <select id="priorityInput">
+                    <option value="high">Tinggi</option>
+                    <option value="medium" selected>Sedang</option>
+                    <option value="low">Rendah</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Kategori</span>
+                  <input id="categoryInput" type="text" maxlength="40" placeholder="Work, Personal, Admin">
+                </label>
+              </div>
+
+              <label>
+                <span>Ingatkan sebelum deadline</span>
+                <div class="reminder-row">
+                  <input id="reminderAmountInput" type="number" min="0" max="10080" step="1" placeholder="15">
+                  <select id="reminderUnitInput" aria-label="Satuan reminder">
+                    <option value="minutes">Menit</option>
+                    <option value="hours">Jam</option>
+                    <option value="days">Hari</option>
+                  </select>
+                </div>
+              </label>
+
+              <label>
+                <span>Tags</span>
+                <input id="tagsInput" type="text" maxlength="120" placeholder="email, meeting">
+              </label>
+            </section>
+
+            <section class="form-section" aria-label="Checklist task">
+              <div class="section-heading">
+                <span class="section-index">04</span>
+                <span>Checklist</span>
+                <span class="section-count" id="subtaskCount">0 item</span>
+              </div>
+              <div class="subtask-input-row">
+                <input id="subtaskInput" type="text" maxlength="100" placeholder="Tambah checklist">
+                <button class="icon-button" id="addSubtaskBtn" type="button" aria-label="Tambah checklist">+</button>
+              </div>
+              <div class="subtask-draft-list" id="subtaskDraftList"></div>
+            </section>
+
+            <section class="form-section" aria-label="Media task">
+              <div class="section-heading">
+                <span class="section-index">05</span>
+                <span>Media pendukung</span>
+                <span class="section-count" id="attachmentCount">0 file</span>
+              </div>
+              <label class="media-dropzone" for="attachmentInput">
+                <span>Tambah gambar, video, atau audio sebagai acuan task</span>
+                <strong>Pilih Media</strong>
+              </label>
+              <input id="attachmentInput" class="media-input" type="file" accept="image/*,video/*,audio/*" multiple>
+              <div class="attachment-draft-list" id="attachmentDraftList"></div>
+            </section>
+
+            <button class="primary-button" id="saveTaskBtn" type="submit">Simpan Task</button>
+          </form>
+        </aside>
+
+        <section class="main-panel" aria-label="Daftar task">
+          <div class="task-toolbar">
+            <div>
+              <p class="panel-kicker">Board</p>
+              <h2>Daftar Task</h2>
+            </div>
+            <div class="toolbar-controls">
+              <div class="search-wrap">
+                <span aria-hidden="true">Search</span>
+                <input id="searchInput" type="search" placeholder="Cari task, kategori, tag, catatan">
+              </div>
+              <select id="sortSelect" aria-label="Urutkan task">
+                <option value="deadline">Deadline terdekat</option>
+                <option value="priority">Prioritas</option>
+                <option value="created">Terbaru dibuat</option>
+                <option value="updated">Terakhir diubah</option>
+              </select>
+            </div>
+          </div>
+
+          <nav class="filter-tabs" aria-label="Filter task">
+            <button class="filter-pill active" type="button" data-filter="all">Semua</button>
+            <button class="filter-pill" type="button" data-filter="today">Hari Ini</button>
+            <button class="filter-pill" type="button" data-filter="upcoming">Upcoming</button>
+            <button class="filter-pill" type="button" data-filter="overdue">Overdue</button>
+            <button class="filter-pill" type="button" data-filter="completed">Selesai</button>
+          </nav>
+
+          <div class="task-list" id="taskList"></div>
+
+          <section class="empty-state hidden" id="emptyState">
+            <div class="empty-mark">&check;</div>
+            <h2>Tidak ada task</h2>
+            <p>Daftar akan muncul sesuai filter dan pencarian aktif.</p>
+          </section>
+        </section>
+      </main>
+
+      <section class="notebook-page app-page" id="notebookPage" aria-label="Logbook progress">
+        <section class="main-panel notebook-panel spreadsheet-panel">
+          <div class="task-toolbar">
+            <div>
+              <p class="panel-kicker">Progress Journal</p>
+              <h2>Logbook Spreadsheet</h2>
+            </div>
+            <div class="toolbar-controls notebook-controls">
+              <div class="search-wrap">
+                <span aria-hidden="true">Search</span>
+                <input id="logSearchInput" type="search" placeholder="Cari isi tabel logbook">
+              </div>
+            </div>
+          </div>
+
+          <div class="spreadsheet-actions" aria-label="Kontrol tabel logbook">
+            <button class="utility-button" id="addLogRowBtn" type="button">Tambah Baris</button>
+            <button class="danger-button" id="deleteLogRowsBtn" type="button">Hapus Baris</button>
+            <button class="utility-button" id="addLogColumnBtn" type="button">Tambah Kolom</button>
+            <button class="danger-button" id="removeLogColumnBtn" type="button">Hapus Kolom Terakhir</button>
+            <button class="primary-button compact-primary" id="exportLogExcelBtn" type="button">Export .xlsx</button>
+          </div>
+
+          <div class="spreadsheet-wrap" role="region" aria-label="Tabel logbook editable" tabindex="0">
+            <table class="log-table" id="logTable">
+              <thead id="logTableHead"></thead>
+              <tbody id="logTableBody"></tbody>
+            </table>
+          </div>
+
+          <section class="empty-state hidden" id="logEmptyState">
+            <div class="empty-mark">&check;</div>
+            <h2>Belum ada logbook</h2>
+            <p>Tambah baris baru untuk mencatat progress harian seperti spreadsheet.</p>
+          </section>
+        </section>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

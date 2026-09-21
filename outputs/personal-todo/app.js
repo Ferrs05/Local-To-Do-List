@@ -1109,24 +1109,41 @@ function createZip(files) {
 
 function createXlsxBlob(headers, rows) {
   const allRows = [headers, ...rows];
+  const preferredWidths = headers.map((header, index) => {
+    if (index === 0) return 14;
+    if (index === 1) return 14;
+    if (index === 2) return 32;
+    if (index === 3) return 72;
+    if (index === 4) return 34;
+    return 24;
+  });
+  const estimateLines = (value, width) => String(value ?? "")
+    .split(/\r?\n/)
+    .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / width)), 0);
+
   const sheetRows = allRows.map((row, rowIndex) => {
     const cells = row.map((cell, colIndex) => {
       const ref = `${columnName(colIndex)}${rowIndex + 1}`;
       const style = rowIndex === 0 ? 1 : ([3, 4].includes(colIndex) ? 2 : 0);
       return `<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${escapeXml(cell)}</t></is></c>`;
     }).join("");
-    const height = rowIndex === 0 ? 24 : 42;
+    const wrappedLines = rowIndex === 0
+      ? 1
+      : Math.max(1, estimateLines(row[3], preferredWidths[3]), estimateLines(row[4], preferredWidths[4]));
+    const height = rowIndex === 0 ? 24 : Math.min(409, Math.max(24, wrappedLines * 15 + 8));
     return `<row r="${rowIndex + 1}" ht="${height}" customHeight="1">${cells}</row>`;
   }).join("");
 
   const colDefs = headers.map((header, index) => {
     const values = rows.map((row) => String(row[index] ?? ""));
-    const maxLen = Math.min(48, Math.max(String(header).length, ...values.map((value) => value.length), 10) + 2);
-    return `<col min="${index + 1}" max="${index + 1}" width="${maxLen}" customWidth="1"/>`;
+    const contentWidth = Math.max(String(header).length + 2, ...values.map((value) => Math.min(value.length + 2, preferredWidths[index])));
+    const width = Math.min(90, Math.max(preferredWidths[index], contentWidth));
+    return `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`;
   }).join("");
 
   const worksheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
   <cols>${colDefs}</cols>
   <sheetData>${sheetRows}</sheetData>
   <autoFilter ref="A1:${columnName(headers.length - 1)}${allRows.length}"/>
@@ -1176,8 +1193,8 @@ function createXlsxBlob(headers, rows) {
   <borders count="2"><border/><border><bottom style="thin"><color rgb="FFD9E2E1"/></bottom></border></borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
   <cellXfs count="3">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf>
   </cellXfs>
   <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>

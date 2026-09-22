@@ -14,7 +14,8 @@ const state = {
   logSearch: "",
   draftSubtasks: [],
   attachmentDrafts: [],
-  activePage: "todo"
+  activePage: "todo",
+  draggedLogId: ""
 };
 
 const els = {
@@ -565,19 +566,18 @@ function renderLogTaskOptions() {
 
 function renderLogs() {
   const q = state.logSearch.trim().toLowerCase();
-  const logs = [...state.logs]
-    .filter((entry) => {
+  const logs = state.logs.filter((entry) => {
       if (!q) return true;
       const task = state.tasks.find((item) => item.id === entry.taskId);
       return [entry.title, entry.body, entry.status, task?.title || "", ...Object.values(entry.custom || {})].join(" ").toLowerCase().includes(q);
-    })
-    .sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
+    });
 
   els.logEmptyState.classList.toggle("hidden", logs.length > 0);
   const taskOptions = renderLogTaskOptions();
   els.logTableHead.innerHTML = `
     <tr>
       <th class="log-row-check-cell"><input id="selectAllLogRows" type="checkbox" aria-label="Pilih semua baris logbook"></th>
+      <th class="log-drag-cell" aria-label="Urutkan baris"></th>
       <th class="log-row-number">No</th>
       <th>Tanggal</th>
       <th>Status</th>
@@ -594,8 +594,9 @@ function renderLogs() {
     </tr>
   `;
   els.logTableBody.innerHTML = logs.map((entry, index) => `
-    <tr data-id="${escapeHtml(entry.id)}">
+    <tr data-id="${escapeHtml(entry.id)}" draggable="true">
       <td class="log-row-check-cell"><input class="log-row-select" type="checkbox" aria-label="Pilih baris logbook"></td>
+      <td class="log-drag-cell"><button class="log-drag-handle" type="button" draggable="true" title="Geser baris" aria-label="Geser baris">&vellip;</button></td>
       <td class="log-row-number">${index + 1}</td>
       <td><input class="log-cell-input" type="date" data-field="date" value="${escapeHtml(entry.date)}"></td>
       <td>
@@ -925,6 +926,52 @@ function handleLogAction(event) {
   saveLogs();
 }
 
+function clearLogDragState() {
+  state.draggedLogId = "";
+  els.logTableBody.querySelectorAll("tr.is-dragging, tr.drop-before, tr.drop-after").forEach((row) => {
+    row.classList.remove("is-dragging", "drop-before", "drop-after");
+  });
+}
+
+function handleLogDragStart(event) {
+  const row = event.target.closest("tr[data-id]");
+  const handle = event.target.closest(".log-drag-handle");
+  if (!row || !handle) {
+    event.preventDefault();
+    return;
+  }
+  state.draggedLogId = row.dataset.id;
+  row.classList.add("is-dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", state.draggedLogId);
+}
+
+function handleLogDragOver(event) {
+  const row = event.target.closest("tr[data-id]");
+  if (!row || !state.draggedLogId || row.dataset.id === state.draggedLogId) return;
+  event.preventDefault();
+  const isAfter = event.clientY > row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+  els.logTableBody.querySelectorAll("tr.drop-before, tr.drop-after").forEach((item) => item.classList.remove("drop-before", "drop-after"));
+  row.classList.add(isAfter ? "drop-after" : "drop-before");
+  event.dataTransfer.dropEffect = "move";
+}
+
+function handleLogDrop(event) {
+  const targetRow = event.target.closest("tr[data-id]");
+  if (!targetRow || !state.draggedLogId || targetRow.dataset.id === state.draggedLogId) return;
+  event.preventDefault();
+  const sourceIndex = state.logs.findIndex((entry) => entry.id === state.draggedLogId);
+  let targetIndex = state.logs.findIndex((entry) => entry.id === targetRow.dataset.id);
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const isAfter = targetRow.classList.contains("drop-after") || event.clientY > targetRow.getBoundingClientRect().top + targetRow.getBoundingClientRect().height / 2;
+  const [moved] = state.logs.splice(sourceIndex, 1);
+  if (sourceIndex < targetIndex) targetIndex -= 1;
+  state.logs.splice(isAfter ? targetIndex + 1 : targetIndex, 0, moved);
+  saveLogs();
+  clearLogDragState();
+  renderLogs();
+}
+
 function addLogRow() {
   state.logs.unshift(normalizeLogEntry({
     id: uid(),
@@ -1208,10 +1255,7 @@ function createXlsxBlob(headers, rows) {
 
 function exportLogExcel() {
   const headers = ["Tanggal", "Status", "Judul", "Progress / Catatan", "Task terkait", ...state.logColumns.map((column) => column.title)];
-  const rows = state.logs
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt))
-    .map((entry) => {
+  const rows = state.logs.map((entry) => {
       const task = state.tasks.find((item) => item.id === entry.taskId);
       return [
         entry.date,
@@ -1362,6 +1406,10 @@ els.logSearchInput.addEventListener("input", (event) => {
 });
 els.logTableBody.addEventListener("input", handleLogAction);
 els.logTableBody.addEventListener("change", handleLogAction);
+els.logTableBody.addEventListener("dragstart", handleLogDragStart);
+els.logTableBody.addEventListener("dragover", handleLogDragOver);
+els.logTableBody.addEventListener("drop", handleLogDrop);
+els.logTableBody.addEventListener("dragend", clearLogDragState);
 els.logTableHead.addEventListener("input", (event) => {
   if (!event.target.dataset.columnId) return;
   updateLogColumnTitle(event.target.dataset.columnId, event.target.value);

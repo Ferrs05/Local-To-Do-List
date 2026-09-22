@@ -1069,10 +1069,50 @@ button:focus-visible {
 }
 
 .log-row-check-cell,
+.log-drag-cell,
 .log-row-number {
   width: 46px;
   min-width: 46px;
   text-align: center;
+}
+
+.log-drag-cell {
+  width: 34px;
+  min-width: 34px;
+}
+
+.log-drag-handle {
+  width: 30px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.log-drag-handle:hover,
+.log-drag-handle:focus-visible {
+  background: var(--paper-deep);
+  color: var(--teal);
+}
+
+.log-drag-handle:active {
+  cursor: grabbing;
+}
+
+.log-table tr.is-dragging {
+  opacity: 0.45;
+}
+
+.log-table tr.drop-before td {
+  box-shadow: inset 0 3px 0 var(--teal);
+}
+
+.log-table tr.drop-after td {
+  box-shadow: inset 0 -3px 0 var(--teal);
 }
 
 .log-row-number {

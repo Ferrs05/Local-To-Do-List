@@ -1079,28 +1079,47 @@ button:focus-visible {
 .log-drag-cell {
   width: 34px;
   min-width: 34px;
+  padding: 0 4px !important;
+  background: var(--surface-quiet) !important;
 }
 
 .log-drag-handle {
-  width: 30px;
-  min-height: 42px;
-  border: 0;
-  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: transparent;
   color: var(--muted);
   cursor: grab;
-  font-size: 1.35rem;
-  line-height: 1;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .log-drag-handle:hover,
 .log-drag-handle:focus-visible {
-  background: var(--paper-deep);
+  border-color: rgba(15, 118, 110, 0.22);
+  background: rgba(15, 118, 110, 0.09);
   color: var(--teal);
+  outline: none;
+  transform: translateY(-1px);
 }
 
 .log-drag-handle:active {
   cursor: grabbing;
+  transform: scale(0.94);
+}
+
+.drag-grip {
+  width: 12px;
+  height: 18px;
+  opacity: 0.72;
+  background-image: radial-gradient(circle, currentColor 1.45px, transparent 1.65px);
+  background-position: 0 0;
+  background-size: 6px 6px;
 }
 
 .log-table tr.is-dragging {
@@ -1108,11 +1127,11 @@ button:focus-visible {
 }
 
 .log-table tr.drop-before td {
-  box-shadow: inset 0 3px 0 var(--teal);
+  box-shadow: inset 0 2px 0 var(--teal), inset 0 1px 0 rgba(15, 118, 110, 0.2);
 }
 
 .log-table tr.drop-after td {
-  box-shadow: inset 0 -3px 0 var(--teal);
+  box-shadow: inset 0 -2px 0 var(--teal), inset 0 -1px 0 rgba(15, 118, 110, 0.2);
 }
 
 .log-row-number {

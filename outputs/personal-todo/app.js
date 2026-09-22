@@ -596,7 +596,7 @@ function renderLogs() {
   els.logTableBody.innerHTML = logs.map((entry, index) => `
     <tr data-id="${escapeHtml(entry.id)}" draggable="true">
       <td class="log-row-check-cell"><input class="log-row-select" type="checkbox" aria-label="Pilih baris logbook"></td>
-      <td class="log-drag-cell"><button class="log-drag-handle" type="button" draggable="true" title="Geser baris" aria-label="Geser baris">&vellip;</button></td>
+      <td class="log-drag-cell"><button class="log-drag-handle" type="button" draggable="true" title="Pindahkan baris" aria-label="Pindahkan baris"><span class="drag-grip" aria-hidden="true"></span></button></td>
       <td class="log-row-number">${index + 1}</td>
       <td><input class="log-cell-input" type="date" data-field="date" value="${escapeHtml(entry.date)}"></td>
       <td>
